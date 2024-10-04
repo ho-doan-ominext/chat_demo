@@ -12,6 +12,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  final _channel = ChatService(ip: '10.99.62.215', port: 2909);
   int _counter = 0;
 
   void _incrementCounter() {
@@ -27,7 +28,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> init() async {
-    await ChatService.instance.initial(
+    await _channel.initial(
       id: widget.id,
       onMessage: (message) {
         print('=========== message: $message');
@@ -37,7 +38,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   void dispose() {
-    // ChatService.instance.dispose();
+    _channel.dispose();
     super.dispose();
   }
 
