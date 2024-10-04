@@ -44,12 +44,11 @@ class _ChatScreenState extends State<ChatScreen> {
     _channel.initial(
         id: widget.id,
         onMessage: (data) {
+          if (data.contains('hihi tesst')) return;
           Map<String, dynamic> valueMap = json.decode(data);
           final mes = ChatMessage.fromJson(valueMap);
           if (mes.sendId == widget.receiverId) {
-            final temp = messagesList.value;
-            temp.add(mes);
-            messagesList.value = temp;
+            messagesList.value = List.from(messagesList.value)..add(mes);
           }
         });
     // _scrollToBottom();
