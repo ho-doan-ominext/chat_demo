@@ -1,4 +1,3 @@
-import 'package:chat_app/src/core/services/chat_service.dart';
 import 'package:chat_app/src/presentation/pages/chat_page/chat_screen.dart';
 import 'package:flutter/material.dart';
 
@@ -14,22 +13,11 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
-    init();
     super.initState();
-  }
-
-  Future<void> init() async {
-    await ChatService.instance.initial(
-      id: widget.id,
-      onMessage: (message) {
-        print('=========== message: $message');
-      },
-    );
   }
 
   @override
   void dispose() {
-    // ChatService.instance.dispose();
     super.dispose();
   }
 

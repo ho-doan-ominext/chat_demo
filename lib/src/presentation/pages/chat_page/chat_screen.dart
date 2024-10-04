@@ -37,36 +37,27 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreenState extends State<ChatScreen> {
   final ValueNotifier<List<ChatMessage>> messagesList =
       ValueNotifier<List<ChatMessage>>([]);
-  // List<ChatMessage> messages = [];
+  final _channel = ChatService(ip: '10.99.62.215', port: 2909);
 
   @override
   void initState() {
-    ChatService.instance.socket?.listen(
-      (data) {
-        final String str = String.fromCharCodes(data);
-        if (str.isNotEmpty) {
-          final mes = ChatMessage.fromJson(jsonDecode(str));
-          if (mes.sendId == '6') {
-            messagesList.value.add(ChatMessage.fromJson(jsonDecode(str)));
+    _channel.initial(
+        id: widget.id,
+        onMessage: (data) {
+          Map<String, dynamic> valueMap = json.decode(data);
+          final mes = ChatMessage.fromJson(valueMap);
+          if (mes.sendId == widget.receiverId) {
+            final temp = messagesList.value;
+            temp.add(mes);
+            messagesList.value = temp;
           }
-        } else {
-          print('=========== else');
-        }
-      },
-      onDone: () {
-        log('socket disconnected');
-        ChatService.instance.socket?.destroy();
-      },
-      onError: (e, s) {
-        log('socket error: $e', stackTrace: s);
-        ChatService.instance.socket?.destroy();
-      },
-    );
+        });
     // _scrollToBottom();
     super.initState();
   }
 
   final _chatCtl = TextEditingController();
+  final _node = FocusNode();
 
   @override
   Widget build(BuildContext context) {
@@ -150,6 +141,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 Expanded(
                   child: TextField(
                     controller: _chatCtl,
+                    focusNode: _node,
                     decoration: const InputDecoration(
                       hintText: "Write message...",
                       hintStyle: TextStyle(color: Colors.black54),
@@ -183,6 +175,16 @@ class _ChatScreenState extends State<ChatScreen> {
 
                       if (response.statusCode == 200) {
                         print(await response.stream.bytesToString());
+                        _node.unfocus();
+                        messagesList.value = List.from(messagesList.value)
+                          ..add(
+                            ChatMessage(
+                              message: _chatCtl.text,
+                              sendId: widget.id,
+                              receiveId: widget.receiverId,
+                            ),
+                          );
+                        _chatCtl.clear();
                       } else {
                         print(response.reasonPhrase);
                       }
@@ -220,9 +222,9 @@ class ChatMessage {
 
   factory ChatMessage.fromJson(Map<String, dynamic> json) {
     return ChatMessage(
-      message: json['message'],
-      sendId: json['sendId'],
-      receiveId: json['receiveId'],
+      message: json['Message'],
+      sendId: json['SendId'],
+      receiveId: json['ReceiveId'],
     );
   }
 

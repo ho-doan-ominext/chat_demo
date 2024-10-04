@@ -8,15 +8,15 @@ class ChatService {
   final String ip;
   final int port;
 
-  ChatService._({required this.ip, required this.port});
+  ChatService({required this.ip, required this.port});
 
-  static ChatService get instance =>
-      ChatService._(ip: '10.99.62.215', port: 2909);
+  // static ChatService get instance =>
+  //     ChatService._(ip: '10.99.62.215', port: 2909);
 
   Socket? socket;
 
   void dispose() {
-    instance.socket?.destroy();
+    socket?.destroy();
   }
 
   Future<void> initial({
@@ -24,9 +24,9 @@ class ChatService {
     required ValueChanged<String> onMessage,
   }) async {
     try {
-      instance.socket = await Socket.connect(ip, port);
+      socket = await Socket.connect(ip, port);
 
-      instance.socket?.write(
+      socket?.write(
         jsonEncode(
           {
             "Message": "from id-$id ${DateTime.now()}",
@@ -36,9 +36,9 @@ class ChatService {
         ),
       );
 
-      instance.socket?.flush();
-      instance.socket?.timeout(const Duration(seconds: 5));
-      instance.socket?.listen(
+      socket?.flush();
+      socket?.timeout(const Duration(seconds: 5));
+      socket?.listen(
         (data) {
           final String str = String.fromCharCodes(data);
           if (str.isNotEmpty) {
@@ -49,16 +49,16 @@ class ChatService {
         },
         onDone: () {
           log('socket disconnected');
-          instance.socket?.destroy();
+          socket?.destroy();
         },
         onError: (e, s) {
           log('socket error: $e', stackTrace: s);
-          instance.socket?.destroy();
+          socket?.destroy();
         },
       );
     } catch (e) {
       log('socket error: $e');
-      instance.socket?.destroy();
+      socket?.destroy();
     }
   }
 }
