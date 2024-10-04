@@ -5,6 +5,41 @@ plugins {
     id "dev.flutter.flutter-gradle-plugin"
 }
 
+def localProperties = new Properties()
+def localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.withReader("UTF-8") { reader ->
+        localProperties.load(reader)
+    }
+}
+
+def dartDefines = [
+        APP_FLAVOR: "dev",
+        APP_NAME: "Chat Demo Dev",
+        APP_WEB_LINK: "https://ho-doan.github.io",
+        APP_ID_SUFFIX: ".dev",
+]
+if (project.hasProperty('dart-defines')) {
+    dartDefines = project.property('dart-defines')
+            .split(',')
+            .collect { new String(it.decodeBase64(), 'UTF-8') }
+            .findAll { it.startsWith('APP_') }
+            .collectEntries {
+                def pair = it.split('=')
+                [(pair.first()): pair.last()]
+            }
+}
+
+def flutterVersionCode = localProperties.getProperty("flutter.versionCode")
+if (flutterVersionCode == null) {
+    flutterVersionCode = "1"
+}
+
+def flutterVersionName = localProperties.getProperty("flutter.versionName")
+if (flutterVersionName == null) {
+    flutterVersionName = "1.0"
+}
+
 android {
     namespace = "com.example.chat_app"
     compileSdk = flutter.compileSdkVersion
@@ -19,6 +54,10 @@ android {
         jvmTarget = JavaVersion.VERSION_1_8
     }
 
+    buildFeatures {
+        buildConfig = true
+    }
+
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.example.chat_app"
@@ -26,8 +65,11 @@ android {
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
-        versionCode = flutter.versionCode
-        versionName = flutter.versionName
+        versionCode = flutterVersionCode.toInteger()
+        versionName = flutterVersionName
+
+        applicationIdSuffix dartDefines.APP_ID_SUFFIX
+        resValue "string", "app_name", dartDefines.APP_NAME
     }
 
     buildTypes {

@@ -1,0 +1,8 @@
+{
+    "APP_FLAVOR": "dev",
+    "APP_NAME": "Chat Demo Dev",
+    "APP_WEB_LINK": "https://ho-doan.github.io",
+    "APP_ID_SUFFIX": ".dev",
+    "IP_NOTIFICATION": "10.99.62.215",
+    "PORT_NOTIFICATION": "2909"
+}

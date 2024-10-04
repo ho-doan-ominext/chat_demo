@@ -1,0 +1,4 @@
+APP_FLAVOR=dev
+APP_NAME=Chat Demo Dev
+APP_WEB_LINK=https://ho-doan.github.io
+APP_ID_SUFFIX=.dev
