@@ -14,7 +14,7 @@ class NotificationOffline {
     DidReceiveBackgroundNotificationResponseCallback? backgroundReceiveCallback,
   }) async {
     const initAndroidSettings = AndroidInitializationSettings(
-      '@drawable/ic_notification',
+      '@mipmap/ic_launcher',
     );
     final initIosSettings = DarwinInitializationSettings(
       requestAlertPermission: false,

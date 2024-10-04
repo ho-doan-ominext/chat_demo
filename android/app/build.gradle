@@ -68,7 +68,7 @@ android {
         versionCode = flutterVersionCode.toInteger()
         versionName = flutterVersionName
 
-        applicationIdSuffix dartDefines.APP_ID_SUFFIX
+        // applicationIdSuffix dartDefines.APP_ID_SUFFIX
         resValue "string", "app_name", dartDefines.APP_NAME
     }
 
