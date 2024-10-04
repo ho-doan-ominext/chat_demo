@@ -1,12 +1,34 @@
 import 'dart:convert';
+import 'dart:developer';
+import 'dart:io';
+import 'package:http/http.dart' as http;
 
 import 'package:chat_app/src/core/services/chat_service.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 
+final dio = Dio(
+  BaseOptions(
+    baseUrl: 'http://10.99.62.215:8080/api',
+    headers: {
+      HttpHeaders.authorizationHeader: 'Basic ${base64.encode(
+        utf8.encode('admin:hihi'),
+      )}',
+      HttpHeaders.contentTypeHeader: "application/json",
+      HttpHeaders.acceptHeader: "*/*",
+    },
+  ),
+);
+
 class ChatScreen extends StatefulWidget {
-  const ChatScreen({super.key, required this.id});
+  const ChatScreen({
+    super.key,
+    required this.id,
+    required this.receiverId,
+  });
 
   final String id;
+  final String receiverId;
 
   @override
   State<ChatScreen> createState() => _ChatScreenState();
@@ -24,24 +46,24 @@ class _ChatScreenState extends State<ChatScreen> {
         onMessage: (data) {
           Map<String, dynamic> valueMap = json.decode(data);
           final mes = ChatMessage.fromJson(valueMap);
-          if (mes.sendId == '6' ||
-              (mes.sendId == widget.id && mes.receiveId == '6')) {
+          if (mes.sendId == widget.receiverId) {
             final temp = messagesList.value;
             temp.add(mes);
-            setState(() {
-              messagesList.value = temp;
-            });
+            messagesList.value = temp;
           }
         });
     // _scrollToBottom();
     super.initState();
   }
 
+  final _chatCtl = TextEditingController();
+  final _node = FocusNode();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Boob'),
+        title: Text('Boob ${widget.receiverId}'),
         centerTitle: true,
         leading: const BackButton(),
       ),
@@ -116,17 +138,60 @@ class _ChatScreenState extends State<ChatScreen> {
                   ),
                 ),
                 const SizedBox(width: 15),
-                const Expanded(
+                Expanded(
                   child: TextField(
-                    decoration: InputDecoration(
-                        hintText: "Write message...",
-                        hintStyle: TextStyle(color: Colors.black54),
-                        border: InputBorder.none),
+                    controller: _chatCtl,
+                    focusNode: _node,
+                    decoration: const InputDecoration(
+                      hintText: "Write message...",
+                      hintStyle: TextStyle(color: Colors.black54),
+                      border: InputBorder.none,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 15),
                 FloatingActionButton(
-                  onPressed: () {},
+                  onPressed: () async {
+                    if (_chatCtl.text.trim().isEmpty) return;
+                    try {
+                      var headers = {
+                        HttpHeaders.authorizationHeader: 'Basic ${base64.encode(
+                          utf8.encode('admin:hihi'),
+                        )}',
+                        HttpHeaders.contentTypeHeader: "application/json",
+                      };
+                      var request = http.Request(
+                          'POST',
+                          Uri.parse(
+                              'http://10.99.62.215:8080/api/Message/send-message'));
+                      request.body = json.encode({
+                        "Message": _chatCtl.text,
+                        "SendId": widget.id,
+                        "ReceiveId": widget.receiverId,
+                      });
+                      request.headers.addAll(headers);
+
+                      http.StreamedResponse response = await request.send();
+
+                      if (response.statusCode == 200) {
+                        print(await response.stream.bytesToString());
+                        _node.unfocus();
+                        messagesList.value = List.from(messagesList.value)
+                          ..add(
+                            ChatMessage(
+                              message: _chatCtl.text,
+                              sendId: widget.id,
+                              receiveId: widget.receiverId,
+                            ),
+                          );
+                        _chatCtl.clear();
+                      } else {
+                        print(response.reasonPhrase);
+                      }
+                    } catch (e, s) {
+                      log(e.toString(), stackTrace: s);
+                    }
+                  },
                   backgroundColor: Colors.blue,
                   elevation: 0,
                   child: const Icon(
