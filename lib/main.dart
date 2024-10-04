@@ -1,7 +1,22 @@
+import 'dart:async';
+import 'dart:developer';
+
+import 'package:chat_app/src/core/services/chat_service.dart';
 import 'package:flutter/material.dart';
 
 void main() {
-  runApp(const MyApp());
+  runZonedGuarded(
+    () async {
+      final chatService = ChatService(ip: '10.99.62.215', port: 2909);
+      await chatService.initial(onMessage: (message) {
+        // TODO(lapOmi): handle notification in app
+      });
+      runApp(const MyApp());
+    },
+    (e, s) {
+      log('app error: $e', stackTrace: s);
+    },
+  );
 }
 
 class MyApp extends StatelessWidget {
