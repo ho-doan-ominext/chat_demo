@@ -10,7 +10,7 @@
             ActionType = "Xcode.IDEStandardExecutionActionsCore.ExecutionActionType.ShellScriptAction">
             <ActionContent
                title = "Run Script"
-               scriptText = "${SRCROOT}/Scripts/decode_dart_defines.sh&#10;">
+               scriptText = "&#10;">
             </ActionContent>
          </ExecutionAction>
       </PreActions>

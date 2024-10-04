@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
+import 'package:chat_app/src/core/services/notification/notification_offline.dart';
 import 'package:http/http.dart' as http;
 
 import 'package:chat_app/src/core/services/chat_service.dart';
@@ -47,6 +48,12 @@ class _ChatScreenState extends State<ChatScreen> {
           if (data.contains('hihi tesst')) return;
           Map<String, dynamic> valueMap = json.decode(data);
           final mes = ChatMessage.fromJson(valueMap);
+
+          NotificationOffline.instance.sentNotification(
+              messagesList.value.length,
+              title: mes.sendId,
+              body: mes.message,
+              payload: '');
           if (mes.sendId == widget.receiverId) {
             messagesList.value = List.from(messagesList.value)..add(mes);
           }
@@ -54,6 +61,12 @@ class _ChatScreenState extends State<ChatScreen> {
     // _scrollToBottom();
     super.initState();
   }
+
+  // @override
+  // void dispose() {
+  //   _channel.dispose();
+  //   super.dispose();
+  // }
 
   final _chatCtl = TextEditingController();
   final _node = FocusNode();

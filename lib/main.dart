@@ -1,12 +1,16 @@
 import 'dart:async';
 import 'dart:developer';
 
+import 'package:chat_app/src/core/services/notification/notification_offline.dart';
 import 'package:chat_app/src/presentation/pages/login_page/login_screen.dart';
 import 'package:flutter/material.dart';
 
 void main() {
   runZonedGuarded(
     () async {
+      WidgetsFlutterBinding.ensureInitialized();
+      NotificationOffline.instance.initial();
+      NotificationOffline.instance.requestIOSPermissions();
       runApp(const MyApp());
     },
     (e, s) {
