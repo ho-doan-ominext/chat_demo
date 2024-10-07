@@ -21,13 +21,48 @@ import org.json.JSONObject
 import java.io.OutputStreamWriter
 import java.net.Socket
 import io.flutter.embedding.engine.FlutterEngine
-import io.flutter.plugin.common.MethodChannel
-import io.flutter.embedding.engine.FlutterEngineCache
 import io.flutter.embedding.engine.dart.DartExecutor
+import io.flutter.plugin.common.MethodChannel
+import io.flutter.plugins.GeneratedPluginRegistrant
 
 class MainActivity : FlutterActivity() {
+    private lateinit var channel: MethodChannel
+    private lateinit var channelFlutter: MethodChannel
+
+    private var userId: String? = null
+
+    override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
+        GeneratedPluginRegistrant.registerWith(flutterEngine)
+        channel =
+            MethodChannel(
+                flutterEngine.dartExecutor.binaryMessenger,
+                "com.example.chat_app.native",
+            )
+        channel.setMethodCallHandler { call, result ->
+                when (call.method) {
+                    "setUser" -> {
+                        userId = call.arguments as String
+                        result.success(null)
+                    }
+
+                    else -> result.notImplemented()
+                }
+            }
+        super.configureFlutterEngine(flutterEngine)
+
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val flutterEngine = FlutterEngine(this)
+
+        flutterEngine.dartExecutor.executeDartEntrypoint(DartExecutor.DartEntrypoint.createDefault())
+        channelFlutter =
+            MethodChannel(
+                flutterEngine.dartExecutor.binaryMessenger,
+                "com.example.chat_app.native2",
+            )
 
         val bundle = intent.extras
 
@@ -37,26 +72,33 @@ class MainActivity : FlutterActivity() {
                 "onCreate: ${bundle.getString("payload")}",
             )
 
-            flutterEngine?.dartExecutor?.executeDartEntrypoint(DartExecutor.DartEntrypoint.createDefault())
-            flutterEngine?.dartExecutor?.let {
-                MethodChannel(it.binaryMessenger, "com.example.chat_app.native")
-                    .invokeMethod("nativeCallback", bundle.getString("payload"))
-            }
+            channelFlutter.invokeMethod("nativeCallback", bundle.getString("payload"))
         }
 
+        val intentService = Intent(this, PushNotificationService::class.java)
+
+        stopService(intentService)
+    }
+
+    override fun onPause() {
         val intent = Intent(this, PushNotificationService::class.java)
+
+        intent.putExtra("userId", userId)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             startForegroundService(intent)
         } else {
             startService(intent)
         }
+        super.onPause()
     }
 }
 
 class PushNotificationService : Service() {
     private val context = this
     private var notifyManagerId = 1
+
+    private var userId: String? = null
 
     override fun onCreate() {
         super.onCreate()
@@ -78,30 +120,22 @@ class PushNotificationService : Service() {
             val socket = Socket(serverIp, port)
             val writer = OutputStreamWriter(socket.getOutputStream())
 
-            // Register device
             val registerMessage = JSONObject()
-            /**
-             * "content": "string",
-             *   "sendId": "4",
-             *   "reciveId": "6",
-             *   "token": "string"
-             */
             registerMessage.put("Message", "register")
             // ID user
-            registerMessage.put("SendId", "6")
+            registerMessage.put("SendId", userId)
             registerMessage.put("ReceiveId", "")
             writer.write(registerMessage.toString())
-            android.util.Log.e("////////", "connectSocket: ${registerMessage.toString()}")
+            android.util.Log.e("////////", "connectSocket: $registerMessage")
             writer.flush()
 
             var str = ""
             while (true) {
                 val data = socket.getInputStream().read()
-//                if(str == "" && socket.getInputStream().available() == 0)return;
                 str += data.toChar()
                 if (socket.getInputStream().available() == 0) {
                     android.util.Log.e("///", "onReceive: $str")
-                    if(str.isNotBlank()) {
+                    if (str.isNotBlank()) {
                         showNotification(str)
                         str = ""
                     }
@@ -155,8 +189,6 @@ class PushNotificationService : Service() {
             notify(notifyManagerId, notification)
             notifyManagerId++
         }
-
-//        startForeground(101, notification)
     }
 
     private fun createSocket() {
@@ -187,10 +219,20 @@ class PushNotificationService : Service() {
     }
 
     override fun onBind(intent: Intent?): IBinder? {
+        val bundle = intent?.extras
+
+        bundle?.getString("userId")?.let {
+            userId = it
+        }
         return null
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        val bundle = intent?.extras
+
+        bundle?.getString("userId")?.let {
+            userId = it
+        }
         super.onStartCommand(intent, flags, startId)
 
         val channelId = createNotificationChannel(applicationContext)

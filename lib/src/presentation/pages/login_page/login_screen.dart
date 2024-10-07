@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:chat_app/src/core/services/method_native/method_native.dart';
 import 'package:chat_app/src/presentation/pages/home_page/home_page.dart';
 import 'package:flutter/material.dart';
 
@@ -41,6 +44,9 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(width: 15),
               OutlinedButton(
                 onPressed: () {
+                  if (Platform.isAndroid) {
+                    MethodNative.instance.setUser(controller.text);
+                  }
                   Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (context) => MyHomePage(

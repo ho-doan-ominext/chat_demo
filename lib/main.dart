@@ -5,7 +5,6 @@ import 'dart:io';
 import 'package:chat_app/src/core/services/notification/notification_offline.dart';
 import 'package:chat_app/src/presentation/pages/login_page/login_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 void main() {
   runZonedGuarded(
